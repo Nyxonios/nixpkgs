@@ -47,7 +47,15 @@ stdenv.mkDerivation (finalAttrs: {
     (lib.cmakeBool "SDLSHADERCROSS_TESTS" finalAttrs.finalPackage.doCheck)
   ];
 
+  preCheck = lib.optionalString stdenv.hostPlatform.isDarwin ''
+    ln -s ${lib.getLib directx-shader-compiler}/lib/libdxcompiler.dylib libdxcompiler.dylib
+  '';
+
   doCheck = true;
+
+  postFixup = lib.optionalString stdenv.hostPlatform.isDarwin ''
+    install_name_tool -add_rpath "${lib.getLib directx-shader-compiler}/lib/" $out/bin/shadercross
+  '';
 
   passthru.updateScript = nix-update-script { extraArgs = [ "--version=branch" ]; };
 
@@ -74,6 +82,6 @@ stdenv.mkDerivation (finalAttrs: {
     license = lib.licenses.zlib;
     maintainers = with lib.maintainers; [ nyxonios ];
     teams = [ lib.teams.sdl ];
-    platforms = lib.platforms.linux;
+    platforms = lib.platforms.all;
   };
 })
